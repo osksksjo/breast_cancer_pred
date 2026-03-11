@@ -6,7 +6,7 @@ for dirname, _, filenames in os.walk('/kaggle/input'):
     for filename in filenames:
         print(os.path.join(dirname, filename))
 
-df = pd.read_csv("/kaggle/input/datasets/merishnasuwal/breast-cancer-prediction-dataset/Breast_cancer_data.csv")
+df = pd.read_csv("Breast_cancer_data.csv")
 import matplotlib.pyplot as plt
 import seaborn as sns
 corrmat = df.corr()
