@@ -1,0 +1,75 @@
+import numpy as np
+import pandas as pd 
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+df = pd.read_csv("/kaggle/input/datasets/merishnasuwal/breast-cancer-prediction-dataset/Breast_cancer_data.csv")
+import matplotlib.pyplot as plt
+import seaborn as sns
+corrmat = df.corr()
+f, ax = plt.subplots(figsize=(12, 9))
+sns.heatmap(corrmat, vmax=.8, square=True);
+# correlation matrix
+k = 6 # number of variables for heatmap
+cols = corrmat.nlargest(k, 'diagnosis')['diagnosis'].index
+cm = np.corrcoef(df[cols].values.T)
+sns.set(font_scale=1.25)
+hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
+plt.show()
+
+df.drop(columns = ["mean_radius","mean_area"], inplace = True)
+sns.set()
+sns.pairplot(df, height = 2 ,kind ='scatter',diag_kind='kde') # взаимные графики на куче признаков
+plt.show()
+
+from sklearn.model_selection import train_test_split
+X = df.drop(columns = ["diagnosis"])
+y = df["diagnosis"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = 45)
+
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+scaler.fit(X_train)
+# Выход pca - numpy матрица, положим ее в новую переменную со всеми фичами
+X_train_scaled = scaler.transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+print('Before scaling: ',X_train.mean(axis=0))
+print('After scaling: ',X_train_scaled.mean(axis=0))
+print('Before scaling: ',X_test.mean(axis=0))
+print('After scaling: ',X_test_scaled.mean(axis=0))
+
+from sklearn.linear_model import LinearRegression
+lr = LinearRegression()
+
+#training
+lr.fit(X_train_scaled, y_train)
+#prediction
+y_train_predicted = lr.predict(X_train_scaled)
+y_test_predicted = lr.predict(X_test_scaled)
+#values in y_test_predicted are not discrete
+for i, value in enumerate(y_test_predicted):
+    if value > 0.5:
+        y_test_predicted[i] = 1
+    else:
+        y_test_predicted[i] = 0
+#but now they are
+
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+accuracy = accuracy_score(y_test, y_test_predicted)
+print("accuracy:")
+print(accuracy)
+#0.9122807017543859
+
+#false positive and negative metrics
+print("\n" + "="*50)
+print("FALSE POSITIVE AND FALSE NEGATIVE METRICS")
+print("="*50)
+
+# Calculate confusion matrix
+cm = confusion_matrix(y_test, y_test_predicted)
+print(cm)
